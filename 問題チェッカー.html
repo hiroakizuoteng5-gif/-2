@@ -432,6 +432,7 @@
     
     .folder-tree {
       margin-bottom: 12px;
+      min-height: 100px;
     }
     
     .folder-item {
@@ -1552,59 +1553,68 @@
       const folderTree = document.getElementById('tab2-folders');
       folderTree.innerHTML = '';
       
-      dm.folders.forEach(folder => {
-        const folderItem = document.createElement('div');
-        folderItem.className = 'folder-item';
-        
-        const header = document.createElement('div');
-        header.className = 'folder-header';
-        header.innerHTML = `<span class="folder-toggle">▼</span> 📁 ${folder.name}`;
-        
-        const childrenDiv = document.createElement('div');
-        childrenDiv.className = 'folder-children open';
-        
-        folder.records.forEach(recordId => {
-          const record = dm.records.find(r => r.id === recordId);
-          if (record) {
-            const childItem = document.createElement('div');
-            childItem.className = 'child-item';
-            childItem.textContent = `📄 ${record.title} (${record.rate}%)`;
-            childrenDiv.appendChild(childItem);
+      if (dm.folders.length === 0) {
+        folderTree.innerHTML = '<div class="empty-message">フォルダがありません<br>下のボタンから新規作成</div>';
+      } else {
+        dm.folders.forEach(folder => {
+          const folderItem = document.createElement('div');
+          folderItem.className = 'folder-item';
+          
+          const header = document.createElement('div');
+          header.className = 'folder-header';
+          header.innerHTML = `<span class="folder-toggle">▼</span> 📁 ${folder.name}`;
+          
+          const childrenDiv = document.createElement('div');
+          childrenDiv.className = 'folder-children open';
+          
+          folder.records.forEach(recordId => {
+            const record = dm.records.find(r => r.id === recordId);
+            if (record) {
+              const childItem = document.createElement('div');
+              childItem.className = 'child-item';
+              childItem.textContent = `📄 ${record.title} (${record.rate}%)`;
+              childrenDiv.appendChild(childItem);
+            }
+          });
+          
+          const actions = document.createElement('div');
+          actions.className = 'folder-actions';
+          actions.innerHTML = `
+            <button class="btn btn-small btn-danger">削除</button>
+          `;
+          
+          actions.querySelector('.btn-danger').addEventListener('click', () => {
+            dm.folders = dm.folders.filter(f => f.id !== folder.id);
+            dm.saveFolders();
+            updateFolderView();
+          });
+          
+          folderItem.appendChild(header);
+          folderItem.appendChild(childrenDiv);
+          folderItem.appendChild(actions);
+          
+          header.addEventListener('click', () => {
+            childrenDiv.classList.toggle('open');
+            header.querySelector('.folder-toggle').textContent = childrenDiv.classList.contains('open') ? '▼' : '▶';
+          });
+          
+          folderTree.appendChild(folderItem);
+        });
+      }
+      
+      // フォルダ作成ボタンの再バインド
+      const addFolderBtn = document.getElementById('tab2-add-folder');
+      if (addFolderBtn) {
+        addFolderBtn.onclick = null;
+        addFolderBtn.addEventListener('click', () => {
+          const name = prompt('フォルダ名を入力してください:');
+          if (name && name.trim()) {
+            dm.addFolder(name.trim());
+            updateFolderView();
           }
         });
-        
-        const actions = document.createElement('div');
-        actions.className = 'folder-actions';
-        actions.innerHTML = `
-          <button class="btn btn-small btn-danger">削除</button>
-        `;
-        
-        actions.querySelector('.btn-danger').addEventListener('click', () => {
-          dm.folders = dm.folders.filter(f => f.id !== folder.id);
-          dm.saveFolders();
-          updateFolderView();
-        });
-        
-        folderItem.appendChild(header);
-        folderItem.appendChild(childrenDiv);
-        folderItem.appendChild(actions);
-        
-        header.addEventListener('click', () => {
-          childrenDiv.classList.toggle('open');
-          header.querySelector('.folder-toggle').textContent = childrenDiv.classList.contains('open') ? '▼' : '▶';
-        });
-        
-        folderTree.appendChild(folderItem);
-      });
-    }
-    
-    document.getElementById('tab2-add-folder').addEventListener('click', () => {
-      const name = prompt('フォルダ名を入力してください:');
-      if (name && name.trim()) {
-        dm.addFolder(name.trim());
-        updateFolderView();
       }
-    });
+    }
     
     document.getElementById('tab2-save').addEventListener('click', () => {
       dm.email = document.getElementById('tab2-email').value;
@@ -1656,6 +1666,7 @@
     // ======================== 初期化 ========================
     updateTab1Grid();
     updateHistoryView();
+    updateFolderView();
   </script>
 </body>
 </html>
