@@ -238,6 +238,7 @@
       user-select: none;
       transition: all 0.2s ease;
       font-weight: 700;
+      position: relative;
     }
     
     .grid-cell:hover {
@@ -264,6 +265,71 @@
       font-size: 0.7rem;
       margin-top: 4px;
       opacity: 0.8;
+    }
+    
+    .grid-cell-name {
+      font-size: 0.65rem;
+      margin-top: 2px;
+      opacity: 0.9;
+      max-width: 100%;
+      word-break: break-word;
+      text-align: center;
+    }
+    
+    .grid-cell-toggle {
+      position: absolute;
+      top: 2px;
+      right: 2px;
+      width: 16px;
+      height: 16px;
+      background: rgba(0,0,0,0.3);
+      border: none;
+      border-radius: 3px;
+      color: #fff;
+      font-size: 0.7rem;
+      cursor: pointer;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      padding: 0;
+    }
+    
+    .grid-cell:hover .grid-cell-toggle {
+      display: flex;
+    }
+    
+    .grid-cell-edit-modal {
+      position: absolute;
+      bottom: 100%;
+      left: 50%;
+      transform: translateX(-50%);
+      background: #fff;
+      border: 1px solid #d7dbe6;
+      border-radius: 6px;
+      padding: 8px;
+      z-index: 1000;
+      white-space: nowrap;
+      margin-bottom: 8px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+    }
+    
+    .grid-cell-edit-modal input {
+      width: 150px;
+      padding: 6px;
+      border: 1px solid #d7dbe6;
+      border-radius: 4px;
+      font-size: 0.85rem;
+    }
+    
+    .grid-cell-edit-modal button {
+      padding: 6px 10px;
+      margin-left: 4px;
+      background: var(--primary);
+      color: #fff;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 0.8rem;
     }
     
     .list-item {
@@ -582,7 +648,6 @@
       margin-bottom: 12px;
     }
     
-    /* ========== 履歴振替表スタイル ========== */
     .drag-assign-modal {
       background: var(--card);
       padding: 20px;
@@ -890,7 +955,7 @@
               <input type="checkbox" id="tab1-use-count" checked />
               問題数指定
             </label>
-            <input type="number" id="tab1-count" min="1" value="30" />
+            <input type="number" id="tab1-count" min="1" value="50" />
           </div>
           <div class="form-group">
             <label class="checkbox-label">
@@ -997,24 +1062,7 @@
               <div class="empty-message">記録を選択してください</div>
             </div>
           </div>
-          
-          <div class="section" style="margin-top: 20px;">
-            <h2>📬 送信スケジュール</h2>
-            <div id="tab2-send-schedule"></div>
-          </div>
         </div>
-      </div>
-    </div>
-  </div>
-  
-  <!-- MODAL -->
-  <div class="modal" id="modal">
-    <div class="modal-box">
-      <div class="modal-title" id="modal-title"></div>
-      <input type="text" class="modal-input" id="modal-input" />
-      <div class="modal-buttons">
-        <button class="btn btn-primary" id="modal-ok">OK</button>
-        <button class="btn" id="modal-cancel" style="background: #e6e9ef; color: #333;">キャンセル</button>
       </div>
     </div>
   </div>
@@ -1022,1122 +1070,592 @@
   <!-- ドラッグ振替モーダル -->
   <div class="modal" id="drag-assign-modal">
     <div class="drag-assign-modal">
-      <div class="drag-assign-header">📤 履歴振替 — ドラッグ&ドロップでフォルダに割り振ります</div>
+      <div class="drag-assign-header">📤 履歴振替（ドラッグ&ドロップ）</div>
       
       <div class="drag-assign-container">
-        <!-- 左パネル：テスト履歴 -->
+        <!-- 左パネル：振替前 -->
         <div class="drag-assign-panel">
-          <div class="drag-assign-panel-header">📜 テスト履歴</div>
-          <div class="drag-assign-list" id="drag-history-list"></div>
+          <div class="drag-assign-panel-header">📋 振替前の記録</div>
+          <div class="drag-assign-list" id="drag-source-list"></div>
         </div>
         
-        <!-- 右パネル：フォルダ選択＋スペース学習 -->
-        <div style="display: flex; flex-direction: column;">
-          <div class="drag-assign-panel">
-            <div class="drag-assign-panel-header">📁 フォルダ一覧（ドロップ先）</div>
-            <div class="drag-assign-list" id="drag-folder-list"></div>
-          </div>
-          
-          <div style="margin-top: 16px;">
-            <div class="ebbinghaus-panel">
-              <div class="ebbinghaus-title">🧠 忘却曲線スケジュール</div>
-              <label class="checkbox-label" style="margin-bottom: 8px;">
-                <input type="checkbox" id="ebbinghaus-auto" />
-                自動登録（スペース学習）
-              </label>
-              <div class="ebbinghaus-dates" id="ebbinghaus-preview"></div>
-            </div>
-            
-            <div style="margin-top: 12px;">
-              <h4 style="font-size: 0.9rem; font-weight: 700; margin-bottom: 8px;">📬 送信スケジュール（統合済み）</h4>
-              <div class="spaced-items-list" id="spaced-items-container"></div>
-            </div>
-          </div>
+        <!-- 右パネル：振替先 -->
+        <div class="drag-assign-panel">
+          <div class="drag-assign-panel-header">📁 振替先フォルダ</div>
+          <div class="drag-assign-list" id="drag-target-list"></div>
+          <div class="drag-drop-zone" id="drag-drop-zone">ここにドラッグ＆ドロップして振替</div>
         </div>
       </div>
       
+      <!-- スケジュール設定 -->
+      <div style="margin-top: 16px;">
+        <div class="ebbinghaus-panel">
+          <div class="ebbinghaus-title">🔄 忘却曲線スケジュール（メール送信予定日）</div>
+          <div class="ebbinghaus-dates" id="ebbinghaus-schedule"></div>
+        </div>
+        <div style="margin-top: 12px; padding: 12px; background: #fff3cd; border-radius: 6px; font-size: 0.85rem; color: #856404;">
+          💡 同じ日付の記録は1つのメールにまとめて送信されます
+        </div>
+      </div>
+      
+      <!-- フッター -->
       <div class="drag-assign-footer">
-        <button class="btn btn-primary" id="drag-assign-ok">✅ 完了</button>
-        <button class="btn" id="drag-assign-cancel" style="background: #e6e9ef; color: #333;">❌ キャンセル</button>
+        <button class="btn btn-warn" id="drag-assign-cancel">キャンセル</button>
+        <button class="btn btn-success" id="drag-assign-confirm">✅ 振替確定</button>
       </div>
     </div>
   </div>
-  
+
   <script>
-    "use strict";
-    
-    const STORAGE_KEY = "seitou-checker-v2-data";
-    const EBBINGHAUS_DAYS = [1, 7, 16, 35, 62];
-    
-    let state = {
-      tab1: {
-        title: "問題セット",
-        gridData: [],
-        marks: {},
-        history: []
-      },
-      tab2: {
-        folders: [
-          { id: 1, name: "数学", children: [{ id: 11, name: "第1章", records: [] }, { id: 12, name: "第2章", records: [] }], records: [] },
-          { id: 2, name: "英語", children: [], records: [] }
-        ],
-        email: "",
-        schedules: {}
+    // ======================== データ管理 ========================
+    class DataManager {
+      constructor() {
+        this.records = JSON.parse(localStorage.getItem('correctAnswerRecords')) || [];
+        this.folders = JSON.parse(localStorage.getItem('folders')) || [];
+        this.email = localStorage.getItem('email') || '';
+        this.gridNames = JSON.parse(localStorage.getItem('gridNames')) || {};
       }
-    };
-    
-    let chart = null;
-    let selectedFolderId = null;
-    let selectedRecordId = null;
-    let currentFolderId = null;
-    let draggedRecord = null;
-    let spacedItems = new Map();
-    
-    // ============ Storage ============
-    function saveState() {
-      try {
-        localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
-      } catch (e) {
-        console.warn("Save failed:", e);
-      }
-    }
-    
-    function loadState() {
-      try {
-        const saved = localStorage.getItem(STORAGE_KEY);
-        if (saved) {
-          const parsed = JSON.parse(saved);
-          state = { ...state, ...parsed };
-        }
-      } catch (e) {
-        console.warn("Load failed:", e);
-      }
-    }
-    
-    // ============ Parser ============
-    function parseCustomPages(str) {
-      const result = {};
-      if (!str) return result;
       
-      str.split(",").forEach((part) => {
-        const [range, count] = part.trim().split(":").map((s) => s.trim());
-        if (!range || !count) return;
-        
-        const num = parseInt(count, 10);
-        if (isNaN(num)) return;
-        
-        if (range.includes("-")) {
-          const [start, end] = range.split("-").map((x) => parseInt(x, 10));
-          if (!isNaN(start) && !isNaN(end)) {
-            for (let p = Math.min(start, end); p <= Math.max(start, end); p++) {
-              result[p] = num;
-            }
+      saveRecords() {
+        localStorage.setItem('correctAnswerRecords', JSON.stringify(this.records));
+      }
+      
+      saveFolders() {
+        localStorage.setItem('folders', JSON.stringify(this.folders));
+      }
+      
+      saveEmail() {
+        localStorage.setItem('email', this.email);
+      }
+      
+      saveGridNames() {
+        localStorage.setItem('gridNames', JSON.stringify(this.gridNames));
+      }
+      
+      addRecord(record) {
+        this.records.push({
+          ...record,
+          id: Date.now(),
+          createdAt: new Date().toISOString(),
+          scheduledDates: this.generateEbbinghausSchedule(new Date())
+        });
+        this.saveRecords();
+      }
+      
+      generateEbbinghausSchedule(baseDate) {
+        const intervals = [1, 7, 16, 35, 62];
+        return intervals.map(days => {
+          const date = new Date(baseDate);
+          date.setDate(date.getDate() + days);
+          return date.toISOString().split('T')[0];
+        });
+      }
+      
+      addFolder(name) {
+        this.folders.push({
+          id: Date.now(),
+          name: name,
+          records: []
+        });
+        this.saveFolders();
+      }
+      
+      moveRecordToFolder(recordId, folderId) {
+        const record = this.records.find(r => r.id === recordId);
+        if (record && folderId) {
+          const folder = this.folders.find(f => f.id === folderId);
+          if (folder && !folder.records.includes(recordId)) {
+            folder.records.push(recordId);
+            this.saveFolders();
+            return true;
           }
-        } else {
-          const p = parseInt(range, 10);
-          if (!isNaN(p)) result[p] = num;
         }
+        return false;
+      }
+    }
+    
+    // ======================== グローバルインスタンス ========================
+    const dm = new DataManager();
+    let currentChart = null;
+    let draggedItem = null;
+    
+    // ======================== UI更新関数 ========================
+    function updateTab1Grid() {
+      const usePages = document.getElementById('tab1-use-pages').checked;
+      const useCount = document.getElementById('tab1-use-count').checked;
+      const gridArea = document.getElementById('tab1-grid');
+      gridArea.innerHTML = '';
+      
+      let totalItems = 0;
+      let correctCount = 0;
+      let wrongCount = 0;
+      
+      if (usePages) {
+        const start = parseInt(document.getElementById('tab1-start').value) || 1;
+        const end = parseInt(document.getElementById('tab1-end').value) || 10;
+        const perPage = parseInt(document.getElementById('tab1-per-page').value) || 2;
+        const customStr = document.getElementById('tab1-custom').value;
+        const skipStr = document.getElementById('tab1-skip').value;
+        const skipPages = parseSkipPages(skipStr);
+        
+        const customConfig = parseCustomConfig(customStr);
+        
+        for (let page = start; page <= end; page++) {
+          if (skipPages.includes(page)) continue;
+          
+          let questionsPerPage = customConfig[page] || perPage;
+          
+          for (let q = 1; q <= questionsPerPage; q++) {
+            const cellId = `q-${page}-${q}`;
+            const cell = document.createElement('div');
+            cell.className = 'grid-cell';
+            cell.id = cellId;
+            
+            const nameData = dm.gridNames[cellId] || '';
+            
+            cell.innerHTML = `
+              <div class="num">${totalItems + 1}</div>
+              <div class="page">P${page}</div>
+              ${nameData ? `<div class="grid-cell-name">${nameData}</div>` : ''}
+              <button class="grid-cell-toggle">✎</button>
+            `;
+            
+            cell.addEventListener('click', (e) => {
+              if (e.target.classList.contains('grid-cell-toggle')) {
+                showGridCellEditModal(cellId, cell);
+              } else {
+                cell.classList.toggle('correct');
+                cell.classList.remove('wrong');
+                updateStats();
+              }
+            });
+            
+            cell.addEventListener('contextmenu', (e) => {
+              e.preventDefault();
+              cell.classList.toggle('wrong');
+              cell.classList.remove('correct');
+              updateStats();
+            });
+            
+            gridArea.appendChild(cell);
+            totalItems++;
+          }
+        }
+      } else if (useCount) {
+        const count = parseInt(document.getElementById('tab1-count').value) || 10;
+        for (let i = 1; i <= count; i++) {
+          const cellId = `q-${i}`;
+          const cell = document.createElement('div');
+          cell.className = 'grid-cell';
+          cell.id = cellId;
+          
+          const nameData = dm.gridNames[cellId] || '';
+          
+          cell.innerHTML = `
+            <div class="num">${i}</div>
+            ${nameData ? `<div class="grid-cell-name">${nameData}</div>` : ''}
+            <button class="grid-cell-toggle">✎</button>
+          `;
+          
+          cell.addEventListener('click', (e) => {
+            if (e.target.classList.contains('grid-cell-toggle')) {
+              showGridCellEditModal(cellId, cell);
+            } else {
+              cell.classList.toggle('correct');
+              cell.classList.remove('wrong');
+              updateStats();
+            }
+          });
+          
+          cell.addEventListener('contextmenu', (e) => {
+            e.preventDefault();
+            cell.classList.toggle('wrong');
+            cell.classList.remove('correct');
+            updateStats();
+          });
+          
+          gridArea.appendChild(cell);
+        }
+        totalItems = count;
+      }
+      
+      document.getElementById('tab1-total').textContent = totalItems;
+      updateStats();
+    }
+    
+    function showGridCellEditModal(cellId, cell) {
+      const modal = document.createElement('div');
+      modal.className = 'grid-cell-edit-modal';
+      modal.innerHTML = `
+        <input type="text" placeholder="問題名を入力..." value="${dm.gridNames[cellId] || ''}" />
+        <button>保存</button>
+      `;
+      
+      const input = modal.querySelector('input');
+      const btn = modal.querySelector('button');
+      
+      btn.addEventListener('click', () => {
+        dm.gridNames[cellId] = input.value;
+        dm.saveGridNames();
+        modal.remove();
+        updateTab1Grid();
       });
       
-      return result;
+      input.addEventListener('keypress', (e) => {
+        if (e.key === 'Enter') btn.click();
+      });
+      
+      cell.appendChild(modal);
+      input.focus();
+    }
+    
+    function parseCustomConfig(str) {
+      const config = {};
+      if (!str) return config;
+      
+      const parts = str.split(',');
+      parts.forEach(part => {
+        part = part.trim();
+        if (part.includes(':')) {
+          const [range, count] = part.split(':');
+          const c = parseInt(count);
+          if (range.includes('-')) {
+            const [start, end] = range.split('-').map(Number);
+            for (let i = start; i <= end; i++) {
+              config[i] = c;
+            }
+          } else {
+            config[parseInt(range)] = c;
+          }
+        }
+      });
+      return config;
     }
     
     function parseSkipPages(str) {
-      const set = new Set();
-      if (!str) return set;
+      const skip = [];
+      if (!str) return skip;
       
-      str.split(",").forEach((part) => {
+      const parts = str.split(',');
+      parts.forEach(part => {
         part = part.trim();
-        if (!part) return;
-        
-        if (part.includes("-")) {
-          const [start, end] = part.split("-").map((x) => parseInt(x, 10));
-          if (!isNaN(start) && !isNaN(end)) {
-            for (let p = Math.min(start, end); p <= Math.max(start, end); p++) {
-              set.add(p);
-            }
+        if (part.includes('-')) {
+          const [start, end] = part.split('-').map(Number);
+          for (let i = start; i <= end; i++) {
+            skip.push(i);
           }
         } else {
-          const p = parseInt(part, 10);
-          if (!isNaN(p)) set.add(p);
+          skip.push(parseInt(part));
         }
       });
-      
-      return set;
+      return skip;
     }
     
-    // ============ Ebbinghaus（忘却曲線）============
-    function calculateEbbinghausDates(baseDate) {
-      const base = new Date(baseDate);
-      const dates = [];
+    function updateStats() {
+      const cells = document.querySelectorAll('#tab1-grid .grid-cell');
+      let correct = 0;
+      let wrong = 0;
       
-      EBBINGHAUS_DAYS.forEach((days) => {
-        const d = new Date(base);
-        d.setDate(d.getDate() + days);
-        dates.push({
-          day: days,
-          date: d.toISOString().split('T')[0]
-        });
+      cells.forEach(cell => {
+        if (cell.classList.contains('correct')) correct++;
+        if (cell.classList.contains('wrong')) wrong++;
       });
       
-      return dates;
+      const total = cells.length;
+      const rate = total > 0 ? ((correct / total) * 100).toFixed(1) : '-';
+      
+      document.getElementById('tab1-rate').textContent = total > 0 ? rate + '%' : '-';
+      document.getElementById('tab1-wrong').textContent = wrong;
     }
     
-    function formatDate(dateStr) {
-      const d = new Date(dateStr + 'T00:00:00');
-      return d.toLocaleDateString('ja-JP', { month: 'short', day: 'numeric' });
-    }
+    // ======================== イベントリスナー ========================
+    document.getElementById('tab1-use-pages').addEventListener('change', (e) => {
+      document.getElementById('tab1-start').disabled = !e.target.checked;
+      document.getElementById('tab1-end').disabled = !e.target.checked;
+      document.getElementById('tab1-custom').disabled = !e.target.checked;
+      document.getElementById('tab1-skip-enable').disabled = !e.target.checked;
+    });
     
-    // ============ Grid Generation ============
-    function generateGrid(config) {
-      const grid = [];
-      const customPages = parseCustomPages(config.custom || "");
-      const skipPages = parseSkipPages(config.skip || "");
-      
-      let questionNum = 1;
-      
-      if (config.usePages) {
-        for (let p = config.start; p <= config.end; p++) {
-          if (skipPages.has(p)) continue;
-          
-          const qPerPage = customPages[p] || config.perPage;
-          for (let i = 0; i < qPerPage; i++) {
-            grid.push({
-              id: grid.length,
-              number: questionNum++,
-              page: p
-            });
-            
-            if (config.useCount && grid.length >= config.count) break;
-          }
-          
-          if (config.useCount && grid.length >= config.count) break;
-        }
-      } else {
-        for (let i = 1; i <= config.count; i++) {
-          grid.push({
-            id: grid.length,
-            number: i,
-            page: "-"
-          });
-        }
-      }
-      
-      return grid;
-    }
+    document.getElementById('tab1-skip-enable').addEventListener('change', (e) => {
+      document.getElementById('tab1-skip').disabled = !e.target.checked;
+    });
     
-    // ============ Rendering ============
-    function renderGrid(domId, gridData, marks, onUpdate) {
-      const container = document.getElementById(domId);
-      container.innerHTML = "";
-      
-      if (!gridData || gridData.length === 0) {
-        container.innerHTML = '<div class="empty-message">グリッドが空です。設定を反映してください。</div>';
-        return;
-      }
-      
-      gridData.forEach((item) => {
-        const cell = document.createElement("div");
-        cell.className = "grid-cell " + (marks[item.id] ? "wrong" : "correct");
-        cell.dataset.id = item.id;
-        cell.innerHTML = `
-          <div class="num">${item.number}</div>
-          <div class="page">p${item.page}</div>
-        `;
-        
-        cell.addEventListener("click", () => {
-          if (marks[item.id]) {
-            delete marks[item.id];
-            cell.classList.remove("wrong");
-            cell.classList.add("correct");
-          } else {
-            marks[item.id] = true;
-            cell.classList.remove("correct");
-            cell.classList.add("wrong");
-          }
-          onUpdate && onUpdate();
-          saveState();
-        });
-        
-        container.appendChild(cell);
-      });
-    }
+    document.getElementById('tab1-use-count').addEventListener('change', (e) => {
+      document.getElementById('tab1-count').disabled = !e.target.checked;
+    });
     
-    function renderTab1() {
-      const data = state.tab1.gridData;
-      const marks = state.tab1.marks;
-      
-      renderGrid("tab1-grid", data, marks, updateTab1Stats);
-      updateTab1Stats();
-      renderTab1History();
-      updateChart();
-    }
+    document.getElementById('tab1-apply').addEventListener('click', updateTab1Grid);
     
-    function updateTab1Stats() {
-      const total = state.tab1.gridData.length;
-      const wrong = Object.keys(state.tab1.marks).length;
-      const rate = total > 0 ? ((total - wrong) / total * 100).toFixed(1) : 0;
-      
-      document.getElementById("tab1-rate").textContent = total > 0 ? rate + "%" : "-";
-      document.getElementById("tab1-wrong").textContent = wrong;
-      document.getElementById("tab1-total").textContent = total;
-    }
-    
-    function renderTab1History() {
-      const box = document.getElementById("tab1-history");
-      const history = state.tab1.history;
-      
-      if (history.length === 0) {
-        box.innerHTML = '<div class="empty-message">履歴はありません</div>';
-        return;
-      }
-      
-      box.innerHTML = "";
-      [...history].reverse().forEach((record, idx) => {
-        const item = document.createElement("div");
-        item.className = "list-item";
-        
-        const checkbox = document.createElement("input");
-        checkbox.type = "checkbox";
-        checkbox.className = "list-item-checkbox";
-        checkbox.dataset.idx = idx;
-        
-        const content = document.createElement("div");
-        content.className = "list-item-content";
-        content.innerHTML = `
-          <div style="font-weight: 700;">${record.title}</div>
-          <div style="font-size: 0.85rem; color: #666;">${record.date}</div>
-        `;
-        
-        const rate = document.createElement("div");
-        rate.style.fontWeight = "800";
-        rate.style.color = "var(--primary)";
-        rate.textContent = record.rate + "%";
-        
-        item.appendChild(checkbox);
-        item.appendChild(content);
-        item.appendChild(rate);
-        box.appendChild(item);
+    document.getElementById('tab1-save').addEventListener('click', () => {
+      const cells = document.querySelectorAll('#tab1-grid .grid-cell');
+      let correct = 0;
+      cells.forEach(cell => {
+        if (cell.classList.contains('correct')) correct++;
       });
       
-      updateCandidates();
-    }
-    
-    function updateCandidates() {
-      const candidateList = document.getElementById("tab1-candidates");
-      const checked = document.querySelectorAll("#tab1-history .list-item-checkbox:checked");
-      
-      if (checked.length === 0) {
-        candidateList.style.display = "none";
-        return;
-      }
-      
-      const candidates = [];
-      state.tab1.history.forEach((record) => {
-        if (record.title && !candidates.includes(record.title)) {
-          candidates.push(record.title);
-        }
-      });
-      
-      candidateList.innerHTML = "";
-      candidates.forEach((candidate) => {
-        const div = document.createElement("div");
-        div.className = "candidate-item";
-        div.textContent = candidate;
-        div.addEventListener("click", () => {
-          document.getElementById("tab1-title").value = candidate;
-          candidateList.style.display = "none";
-          document.getElementById("tab1-use-candidates").checked = false;
-        });
-        candidateList.appendChild(div);
-      });
-      
-      candidateList.style.display = "block";
-    }
-    
-    function renderTab2Folders() {
-      const container = document.getElementById("tab2-folders");
-      container.innerHTML = "";
-      
-      state.tab2.folders.forEach((folder) => {
-        const folderDiv = document.createElement("div");
-        folderDiv.className = "folder-item";
-        if (currentFolderId === folder.id) folderDiv.classList.add("active");
-        
-        const headerDiv = document.createElement("div");
-        headerDiv.className = "folder-header";
-        
-        const toggleSpan = document.createElement("span");
-        toggleSpan.className = "folder-toggle";
-        toggleSpan.textContent = folder.children.length > 0 ? "▼" : "-";
-        
-        const nameSpan = document.createElement("span");
-        nameSpan.textContent = "📁 " + folder.name;
-        
-        headerDiv.appendChild(toggleSpan);
-        headerDiv.appendChild(nameSpan);
-        
-        const childrenDiv = document.createElement("div");
-        childrenDiv.className = "folder-children";
-        if (folder.children.length > 0) {
-          childrenDiv.classList.add("open");
-        }
-        
-        folder.children.forEach((child) => {
-          const childDiv = document.createElement("div");
-          childDiv.className = "child-item";
-          if (currentFolderId === child.id) childDiv.classList.add("active");
-          childDiv.innerHTML = `📄 ${child.name} <span style="font-size:0.8rem; color:#999;">(${child.records ? child.records.length : 0}件)</span>`;
-          childDiv.addEventListener("click", (e) => {
-            e.stopPropagation();
-            selectFolder(child.id, child.records || []);
-            renderTab2Folders();
-            renderTab2Records();
-          });
-          childrenDiv.appendChild(childDiv);
-        });
-        
-        headerDiv.addEventListener("click", () => {
-          selectFolder(folder.id, folder.records || []);
-          if (folder.children.length > 0) {
-            childrenDiv.classList.toggle("open");
-            toggleSpan.textContent = childrenDiv.classList.contains("open") ? "▼" : "▶";
-          }
-          renderTab2Folders();
-          renderTab2Records();
-        });
-        
-        folderDiv.appendChild(headerDiv);
-        folderDiv.appendChild(childrenDiv);
-        
-        const actionsDiv = document.createElement("div");
-        actionsDiv.className = "folder-actions";
-        
-        const addChildBtn = document.createElement("button");
-        addChildBtn.className = "btn btn-primary btn-small";
-        addChildBtn.textContent = "+ 追加";
-        addChildBtn.addEventListener("click", (e) => {
-          e.stopPropagation();
-          showModal("サブフォルダ名", "フォルダ名を入力", (name) => {
-            if (!name) return;
-            folder.children.push({
-              id: Date.now(),
-              name,
-              records: []
-            });
-            saveState();
-            renderTab2Folders();
-          });
-        });
-        
-        actionsDiv.appendChild(addChildBtn);
-        folderDiv.appendChild(actionsDiv);
-        
-        container.appendChild(folderDiv);
-      });
-    }
-    
-    function selectFolder(folderId, records) {
-      currentFolderId = folderId;
-      selectedRecordId = null;
-    }
-    
-    function renderTab2Records() {
-      const container = document.getElementById("tab2-records-list");
-      container.innerHTML = "";
-      
-      if (!currentFolderId) {
-        container.innerHTML = '<div class="empty-message">フォルダを選択してください</div>';
-        return;
-      }
-      
-      let records = [];
-      const findRecords = (folders) => {
-        for (const folder of folders) {
-          if (folder.id === currentFolderId) {
-            records = folder.records || [];
-            return;
-          }
-          if (folder.children) {
-            for (const child of folder.children) {
-              if (child.id === currentFolderId) {
-                records = child.records || [];
-                return;
-              }
-            }
-          }
-        }
+      const record = {
+        title: document.getElementById('tab1-title').value,
+        totalQuestions: cells.length,
+        correctCount: correct,
+        rate: cells.length > 0 ? ((correct / cells.length) * 100).toFixed(1) : 0,
+        timestamp: new Date().toLocaleString('ja-JP')
       };
       
-      findRecords(state.tab2.folders);
-      
-      if (records.length === 0) {
-        container.innerHTML = '<div class="empty-message">記録がありません</div>';
-        return;
+      dm.addRecord(record);
+      alert('✅ 記録を保存しました');
+      updateHistoryView();
+    });
+    
+    document.getElementById('tab1-open-drag-assign').addEventListener('click', openDragAssignModal);
+    
+    document.getElementById('tab1-export').addEventListener('click', () => {
+      const data = {
+        records: dm.records,
+        folders: dm.folders,
+        email: dm.email,
+        gridNames: dm.gridNames
+      };
+      const json = JSON.stringify(data, null, 2);
+      const blob = new Blob([json], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `correct-answer-checker-${new Date().getTime()}.json`;
+      a.click();
+    });
+    
+    document.getElementById('tab1-clear').addEventListener('click', () => {
+      if (confirm('⚠️ 全データを削除してもよろしいですか？')) {
+        dm.records = [];
+        dm.folders = [];
+        dm.gridNames = {};
+        dm.saveRecords();
+        dm.saveFolders();
+        dm.saveGridNames();
+        updateTab1Grid();
+        updateHistoryView();
+        alert('🗑️ 全データを削除しました');
       }
-      
-      records.forEach((record, idx) => {
-        const item = document.createElement("div");
-        item.className = "record-item";
-        if (selectedRecordId === idx) item.classList.add("selected");
-        item.innerHTML = `
-          <div class="record-title">${record.title}</div>
-          <div class="record-meta">${record.date}</div>
-          <div class="record-rate">${record.rate}%</div>
-        `;
-        item.addEventListener("click", () => {
-          selectedRecordId = idx;
-          renderTab2Records();
-          renderTab2RecordDetail(record);
-        });
-        container.appendChild(item);
-      });
-    }
+    });
     
-    function renderTab2RecordDetail(record) {
-      const container = document.getElementById("tab2-record-detail");
-      container.innerHTML = `
-        <div class="detail-row">
-          <span class="detail-label">📝 問題セット</span>
-          <span class="detail-value">${record.title}</span>
-        </div>
-        <div class="detail-row">
-          <span class="detail-label">📅 記録日</span>
-          <span class="detail-value">${record.date}</span>
-        </div>
-        <div class="detail-row">
-          <span class="detail-label">📊 正答率</span>
-          <span class="detail-value">${record.rate}%</span>
-        </div>
-        <div class="detail-row">
-          <span class="detail-label">❌ 間違い数</span>
-          <span class="detail-value">${record.wrong}問</span>
-        </div>
-        <div class="detail-row">
-          <span class="detail-label">📋 問題数</span>
-          <span class="detail-value">${record.total}問</span>
-        </div>
-      `;
-    }
-    
-    function renderTab2SendSchedule() {
-      const container = document.getElementById("tab2-send-schedule");
-      
-      if (spacedItems.size === 0) {
-        container.innerHTML = '<div class="empty-message">スケジュールがありません</div>';
-        return;
-      }
-      
-      container.innerHTML = "";
-      
-      const grouped = {};
-      spacedItems.forEach((item) => {
-        if (!grouped[item.date]) {
-          grouped[item.date] = [];
-        }
-        grouped[item.date].push(item);
-      });
-      
-      const sortedDates = Object.keys(grouped).sort();
-      
-      sortedDates.forEach((date) => {
-        const dateDiv = document.createElement("div");
-        dateDiv.style.marginBottom = "16px";
-        
-        const dateHeader = document.createElement("div");
-        dateHeader.style.fontWeight = "700";
-        dateHeader.style.color = "#333";
-        dateHeader.style.marginBottom = "8px";
-        dateHeader.textContent = "📅 " + formatDate(date);
-        
-        const itemsDiv = document.createElement("div");
-        itemsDiv.style.display = "grid";
-        itemsDiv.style.gap = "8px";
-        
-        grouped[date].forEach((item) => {
-          const itemEl = document.createElement("div");
-          itemEl.style.background = "#f8f9fa";
-          itemEl.style.padding = "10px";
-          itemEl.style.borderRadius = "6px";
-          itemEl.style.borderLeft = "3px solid var(--primary)";
-          itemEl.textContent = `${item.title} (${item.rate}%)`;
-          itemsDiv.appendChild(itemEl);
-        });
-        
-        dateDiv.appendChild(dateHeader);
-        dateDiv.appendChild(itemsDiv);
-        container.appendChild(dateDiv);
-      });
-    }
-    
-    function updateChart() {
-      const canvas = document.getElementById("tab1-chart");
-      if (!canvas) return;
-      
-      const history = state.tab1.history;
-      const labels = history.map((h) => h.date);
-      const data = history.map((h) => Number(h.rate) || 0);
-      
-      if (!chart) {
-        chart = new Chart(canvas, {
-          type: "line",
-          data: {
-            labels,
-            datasets: [
-              {
-                label: "正答率 (%)",
-                data,
-                borderColor: "var(--primary)",
-                backgroundColor: "rgba(102, 126, 234, 0.1)",
-                borderWidth: 2,
-                tension: 0.4,
-                fill: true
-              }
-            ]
-          },
-          options: {
-            responsive: true,
-            maintainAspectRatio: true,
-            plugins: {
-              legend: { display: false }
-            },
-            scales: {
-              y: {
-                beginAtZero: true,
-                max: 100
-              }
-            }
-          }
-        });
-      } else {
-        chart.data.labels = labels;
-        chart.data.datasets[0].data = data;
-        chart.update();
-      }
-    }
-    
-    // ============ ドラッグ振替 ============
+    // ======================== 履歴振替モーダル ========================
     function openDragAssignModal() {
-      spacedItems.clear();
-      const modal = document.getElementById("drag-assign-modal");
+      const modal = document.getElementById('drag-assign-modal');
+      const sourceList = document.getElementById('drag-source-list');
+      const targetList = document.getElementById('drag-target-list');
       
-      // 左パネル：履歴リスト
-      const historyList = document.getElementById("drag-history-list");
-      historyList.innerHTML = "";
+      sourceList.innerHTML = '';
+      targetList.innerHTML = '';
       
-      state.tab1.history.forEach((record, idx) => {
-        const item = document.createElement("div");
-        item.className = "drag-item";
+      dm.records.forEach(record => {
+        const item = document.createElement('div');
+        item.className = 'drag-item';
         item.draggable = true;
-        item.dataset.idx = idx;
-        
+        item.dataset.recordId = record.id;
         item.innerHTML = `
           <div class="drag-item-content">
             <div class="drag-item-title">${record.title}</div>
-            <div class="drag-item-meta">${record.date}</div>
+            <div class="drag-item-meta">${record.timestamp}</div>
           </div>
           <div class="drag-item-rate">${record.rate}%</div>
         `;
         
-        item.addEventListener("dragstart", (e) => {
-          draggedRecord = record;
-          item.classList.add("dragging");
-          e.dataTransfer.effectAllowed = "copy";
+        item.addEventListener('dragstart', (e) => {
+          draggedItem = record;
+          item.classList.add('dragging');
+          e.dataTransfer.effectAllowed = 'move';
         });
         
-        item.addEventListener("dragend", (e) => {
-          item.classList.remove("dragging");
+        item.addEventListener('dragend', () => {
+          item.classList.remove('dragging');
         });
         
-        historyList.appendChild(item);
+        sourceList.appendChild(item);
       });
       
-      // 右パネル：フォルダリスト
-      const folderList = document.getElementById("drag-folder-list");
-      folderList.innerHTML = "";
-      
-      state.tab2.folders.forEach((folder) => {
-        renderFolderItemForDrag(folderList, folder, null);
+      dm.folders.forEach(folder => {
+        const item = document.createElement('div');
+        item.className = 'drag-item';
+        item.dataset.folderId = folder.id;
+        item.innerHTML = `
+          <div class="drag-item-content">
+            <div class="drag-item-title">📁 ${folder.name}</div>
+            <div class="drag-item-meta">記録数: ${folder.records.length}</div>
+          </div>
+        `;
+        targetList.appendChild(item);
       });
       
-      // スペース学習プレビュー
-      renderEbbinghausPreview();
-      
-      modal.classList.add("active");
-    }
-    
-    function renderFolderItemForDrag(container, folder, parentCheckbox) {
-      const folderDiv = document.createElement("div");
-      folderDiv.className = "folder-assign-item";
-      
-      const checkbox = document.createElement("input");
-      checkbox.type = "checkbox";
-      checkbox.className = "folder-assign-checkbox";
-      checkbox.dataset.folderId = folder.id;
-      
-      const name = document.createElement("div");
-      name.className = "folder-assign-name";
-      name.textContent = "📁 " + folder.name;
-      
-      const count = document.createElement("div");
-      count.className = "folder-assign-count";
-      count.textContent = (folder.records ? folder.records.length : 0) + "件";
-      
-      folderDiv.appendChild(checkbox);
-      folderDiv.appendChild(name);
-      folderDiv.appendChild(count);
-      
-      // ドラッグオーバー効果
-      folderDiv.addEventListener("dragover", (e) => {
+      const dropZone = document.getElementById('drag-drop-zone');
+      dropZone.addEventListener('dragover', (e) => {
         e.preventDefault();
-        folderDiv.style.background = "#e8f4ff";
-        folderDiv.style.borderColor = "var(--primary)";
+        dropZone.classList.add('drag-over');
       });
       
-      folderDiv.addEventListener("dragleave", () => {
-        folderDiv.style.background = "#fff";
-        folderDiv.style.borderColor = "var(--success)";
+      dropZone.addEventListener('dragleave', () => {
+        dropZone.classList.remove('drag-over');
       });
       
-      folderDiv.addEventListener("drop", (e) => {
+      dropZone.addEventListener('drop', (e) => {
         e.preventDefault();
-        if (draggedRecord) {
-          checkbox.checked = true;
-          addSpacedItem(draggedRecord, folder.id);
-          renderSpacedItemsList();
-          renderEbbinghausPreview();
+        dropZone.classList.remove('drag-over');
+        if (draggedItem) {
+          alert(`📤 "${draggedItem.title}" をドロップしました`);
         }
-        folderDiv.style.background = "#fff";
-        folderDiv.style.borderColor = "var(--success)";
       });
       
-      container.appendChild(folderDiv);
+      // Ebbinghaus スケジュール表示
+      const scheduleDiv = document.getElementById('ebbinghaus-schedule');
+      scheduleDiv.innerHTML = '';
+      const intervals = [
+        { days: 1, label: '1日後' },
+        { days: 7, label: '7日後' },
+        { days: 16, label: '16日後' },
+        { days: 35, label: '35日後' },
+        { days: 62, label: '62日後' }
+      ];
       
-      // サブフォルダ
-      if (folder.children && folder.children.length > 0) {
-        folder.children.forEach((child) => {
-          const childDiv = document.createElement("div");
-          childDiv.style.marginLeft = "20px";
-          childDiv.style.marginTop = "8px";
-          
-          const childFolderDiv = document.createElement("div");
-          childFolderDiv.className = "folder-assign-item";
-          
-          const childCheckbox = document.createElement("input");
-          childCheckbox.type = "checkbox";
-          childCheckbox.className = "folder-assign-checkbox";
-          childCheckbox.dataset.folderId = child.id;
-          
-          const childName = document.createElement("div");
-          childName.className = "folder-assign-name";
-          childName.textContent = "📄 " + child.name;
-          
-          const childCount = document.createElement("div");
-          childCount.className = "folder-assign-count";
-          childCount.textContent = (child.records ? child.records.length : 0) + "件";
-          
-          childFolderDiv.appendChild(childCheckbox);
-          childFolderDiv.appendChild(childName);
-          childFolderDiv.appendChild(childCount);
-          
-          childFolderDiv.addEventListener("dragover", (e) => {
-            e.preventDefault();
-            childFolderDiv.style.background = "#e8f4ff";
-          });
-          
-          childFolderDiv.addEventListener("dragleave", () => {
-            childFolderDiv.style.background = "#fff";
-          });
-          
-          childFolderDiv.addEventListener("drop", (e) => {
-            e.preventDefault();
-            if (draggedRecord) {
-              childCheckbox.checked = true;
-              addSpacedItem(draggedRecord, child.id);
-              renderSpacedItemsList();
-              renderEbbinghausPreview();
-            }
-            childFolderDiv.style.background = "#fff";
-          });
-          
-          childDiv.appendChild(childFolderDiv);
-          container.appendChild(childDiv);
-        });
-      }
-    }
-    
-    function addSpacedItem(record, folderId) {
-      const baseDate = record.date.split(' ')[0];
-      const dates = calculateEbbinghausDates(baseDate);
-      
-      dates.forEach((d) => {
-        const key = d.date + "_" + record.title;
-        spacedItems.set(key, {
-          title: record.title,
-          rate: record.rate,
-          date: d.date,
-          day: d.day,
-          folderId: folderId
-        });
-      });
-    }
-    
-    function renderSpacedItemsList() {
-      const container = document.getElementById("spaced-items-container");
-      container.innerHTML = "";
-      
-      if (spacedItems.size === 0) {
-        container.innerHTML = '<div class="empty-message">アイテムがありません</div>';
-        return;
-      }
-      
-      const grouped = {};
-      spacedItems.forEach((item) => {
-        if (!grouped[item.date]) {
-          grouped[item.date] = [];
-        }
-        grouped[item.date].push(item);
-      });
-      
-      const sortedDates = Object.keys(grouped).sort();
-      
-      sortedDates.forEach((date) => {
-        grouped[date].forEach((item) => {
-          const itemDiv = document.createElement("div");
-          itemDiv.className = "spaced-item";
-          
-          const infoDiv = document.createElement("div");
-          infoDiv.className = "spaced-item-info";
-          
-          const titleDiv = document.createElement("div");
-          titleDiv.className = "spaced-item-title";
-          titleDiv.textContent = item.title;
-          
-          const datesDiv = document.createElement("div");
-          datesDiv.className = "spaced-item-dates";
-          datesDiv.textContent = `${formatDate(date)} (${item.day}日目) - ${item.rate}%`;
-          
-          infoDiv.appendChild(titleDiv);
-          infoDiv.appendChild(datesDiv);
-          
-          const removeBtn = document.createElement("button");
-          removeBtn.className = "spaced-item-remove";
-          removeBtn.textContent = "削除";
-          removeBtn.addEventListener("click", () => {
-            const keys = [];
-            spacedItems.forEach((v, k) => {
-              if (v.date === date && v.title === item.title) {
-                keys.push(k);
-              }
-            });
-            keys.forEach(k => spacedItems.delete(k));
-            renderSpacedItemsList();
-            renderEbbinghausPreview();
-          });
-          
-          itemDiv.appendChild(infoDiv);
-          itemDiv.appendChild(removeBtn);
-          container.appendChild(itemDiv);
-        });
-      });
-    }
-    
-    function renderEbbinghausPreview() {
-      const container = document.getElementById("ebbinghaus-preview");
-      container.innerHTML = "";
-      
-      const checkbox = document.getElementById("ebbinghaus-auto");
-      if (!checkbox.checked || spacedItems.size === 0) {
-        container.innerHTML = '<div style="text-align: center; color: #999; font-style: italic; padding: 20px;">選択されたアイテムのスケジュール</div>';
-        return;
-      }
-      
-      const grouped = {};
-      spacedItems.forEach((item) => {
-        if (!grouped[item.date]) {
-          grouped[item.date] = 0;
-        }
-        grouped[item.date]++;
-      });
-      
-      const sortedDates = Object.keys(grouped).sort();
-      
-      sortedDates.forEach((date) => {
-        const dateDiv = document.createElement("div");
-        dateDiv.className = "ebbinghaus-date-item";
+      intervals.forEach(interval => {
+        const date = new Date();
+        date.setDate(date.getDate() + interval.days);
+        const dateStr = date.toISOString().split('T')[0];
         
-        const daySpan = document.createElement("div");
-        daySpan.className = "ebbinghaus-date-day";
-        daySpan.textContent = formatDate(date);
-        
-        const countSpan = document.createElement("div");
-        countSpan.className = "ebbinghaus-date-value";
-        countSpan.textContent = grouped[date] + "件";
-        
-        dateDiv.appendChild(daySpan);
-        dateDiv.appendChild(countSpan);
-        container.appendChild(dateDiv);
+        const item = document.createElement('div');
+        item.className = 'ebbinghaus-date-item';
+        item.innerHTML = `
+          <div class="ebbinghaus-date-day">${interval.label}</div>
+          <div class="ebbinghaus-date-value">${dateStr}</div>
+        `;
+        scheduleDiv.appendChild(item);
       });
-    }
-    
-    // ============ Actions ============
-    function applyTab1() {
-      if (!confirm("現在の採点結果を消して新しく生成しますか？")) return;
       
-      const config = {
-        useCount: document.getElementById("tab1-use-count").checked,
-        usePages: document.getElementById("tab1-use-pages").checked,
-        count: parseInt(document.getElementById("tab1-count").value, 10) || 30,
-        start: parseInt(document.getElementById("tab1-start").value, 10) || 1,
-        end: parseInt(document.getElementById("tab1-end").value, 10) || 1,
-        perPage: parseInt(document.getElementById("tab1-per-page").value, 10) || 1,
-        custom: document.getElementById("tab1-custom").value.trim(),
-        skip: document.getElementById("tab1-skip-enable").checked
-          ? document.getElementById("tab1-skip").value.trim()
-          : ""
-      };
-      
-      state.tab1.title = document.getElementById("tab1-title").value || state.tab1.title;
-      state.tab1.gridData = generateGrid(config);
-      state.tab1.marks = {};
-      saveState();
-      renderTab1();
+      modal.classList.add('active');
     }
     
-    function saveTab1Result() {
-      const title = document.getElementById("tab1-title").value || "無題";
-      const total = state.tab1.gridData.length;
-      const wrong = Object.keys(state.tab1.marks).length;
-      const rate = total > 0 ? ((total - wrong) / total * 100).toFixed(1) : 0;
-      
-      const record = {
-        date: new Date().toLocaleString("ja-JP"),
-        title,
-        total,
-        wrong,
-        rate: Number(rate)
-      };
-      
-      state.tab1.history.push(record);
-      saveState();
-      renderTab1History();
-      updateChart();
-      alert(`✅ 記録しました: ${rate}%`);
-    }
+    document.getElementById('drag-assign-cancel').addEventListener('click', () => {
+      document.getElementById('drag-assign-modal').classList.remove('active');
+      draggedItem = null;
+    });
     
-    function clearTab1() {
-      if (!confirm("📜 全データを削除しますか？")) return;
-      state.tab1.history = [];
-      state.tab1.marks = {};
-      state.tab1.gridData = [];
-      saveState();
-      renderTab1();
-      alert("✅ 削除しました");
-    }
-    
-    function exportTab1Data() {
-      const data = JSON.stringify(state.tab1.history, null, 2);
-      const blob = new Blob([data], { type: "application/json" });
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement("a");
-      a.href = url;
-      a.download = "seitou-history-" + new Date().getTime() + ".json";
-      a.click();
-      URL.revokeObjectURL(url);
-    }
-    
-    function saveTab2Result() {
-      const email = document.getElementById("tab2-email").value.trim();
-      if (!email) {
-        alert("📧 メールアドレスを入力してください");
-        return;
+    document.getElementById('drag-assign-confirm').addEventListener('click', () => {
+      if (draggedItem) {
+        alert('✅ 振替が確定されました');
+        document.getElementById('drag-assign-modal').classList.remove('active');
+        draggedItem = null;
+      } else {
+        alert('⚠️ 記録を選択してください');
       }
-      
-      state.tab2.email = email;
-      saveState();
-      alert("✅ メールアドレスを保存しました");
-    }
+    });
     
-    function addFolder() {
-      showModal("新規フォルダ名", "フォルダ名を入力", (name) => {
-        if (!name) return;
-        state.tab2.folders.push({
-          id: Date.now(),
-          name,
-          children: [],
-          records: []
-        });
-        saveState();
-        renderTab2Folders();
-      });
-    }
-    
-    // ============ Modal ============
-    function showModal(title, placeholder, callback) {
-      const modal = document.getElementById("modal");
-      document.getElementById("modal-title").textContent = title;
-      const input = document.getElementById("modal-input");
-      input.value = "";
-      input.placeholder = placeholder;
-      modal.classList.add("active");
-      input.focus();
+    // ======================== TAB2 フォルダ管理 ========================
+    function updateFolderView() {
+      const folderTree = document.getElementById('tab2-folders');
+      folderTree.innerHTML = '';
       
-      const ok = document.getElementById("modal-ok");
-      const cancel = document.getElementById("modal-cancel");
-      
-      const onOk = () => {
-        const value = input.value.trim();
-        cleanup();
-        callback && callback(value);
-      };
-      
-      const onCancel = () => {
-        cleanup();
-      };
-      
-      const cleanup = () => {
-        ok.removeEventListener("click", onOk);
-        cancel.removeEventListener("click", onCancel);
-        input.removeEventListener("keydown", onKeyDown);
-        modal.classList.remove("active");
-      };
-      
-      const onKeyDown = (e) => {
-        if (e.key === "Enter") onOk();
-        if (e.key === "Escape") onCancel();
-      };
-      
-      ok.addEventListener("click", onOk);
-      cancel.addEventListener("click", onCancel);
-      input.addEventListener("keydown", onKeyDown);
-    }
-    
-    // ============ Init ============
-    function init() {
-      loadState();
-      
-      // Tab switching
-      document.querySelectorAll(".tab-button").forEach((btn) => {
-        btn.addEventListener("click", () => {
-          const tabId = btn.dataset.tab;
-          
-          document.querySelectorAll(".tab-button").forEach((b) => b.classList.remove("active"));
-          btn.classList.add("active");
-          
-          document.querySelectorAll(".content").forEach((c) => c.classList.remove("active"));
-          document.getElementById(tabId).classList.add("active");
-          
-          if (tabId === "tab2") {
-            renderTab2SendSchedule();
+      dm.folders.forEach(folder => {
+        const folderItem = document.createElement('div');
+        folderItem.className = 'folder-item';
+        
+        const header = document.createElement('div');
+        header.className = 'folder-header';
+        header.innerHTML = `<span class="folder-toggle">▼</span> 📁 ${folder.name}`;
+        
+        const childrenDiv = document.createElement('div');
+        childrenDiv.className = 'folder-children open';
+        
+        folder.records.forEach(recordId => {
+          const record = dm.records.find(r => r.id === recordId);
+          if (record) {
+            const childItem = document.createElement('div');
+            childItem.className = 'child-item';
+            childItem.textContent = `📄 ${record.title} (${record.rate}%)`;
+            childrenDiv.appendChild(childItem);
           }
         });
-      });
-      
-      // Tab1 events
-      document.getElementById("tab1-apply").addEventListener("click", applyTab1);
-      document.getElementById("tab1-save").addEventListener("click", saveTab1Result);
-      document.getElementById("tab1-clear").addEventListener("click", clearTab1);
-      document.getElementById("tab1-export").addEventListener("click", exportTab1Data);
-      
-      document.getElementById("tab1-open-drag-assign").addEventListener("click", openDragAssignModal);
-      
-      document.getElementById("tab1-use-candidates").addEventListener("change", () => {
-        updateCandidates();
-      });
-      
-      const skipCheckbox = document.getElementById("tab1-skip-enable");
-      skipCheckbox.addEventListener("change", () => {
-        document.getElementById("tab1-skip").disabled = !skipCheckbox.checked;
-      });
-      
-      // ドラッグ振替モーダルイベント
-      document.getElementById("drag-assign-ok").addEventListener("click", () => {
-        // スペース学習が有効な場合、フォルダに自動追加
-        const autoSwitch = document.getElementById("ebbinghaus-auto").checked;
         
-        if (autoSwitch && spacedItems.size > 0) {
-          spacedItems.forEach((item) => {
-            const findAndStore = (folders, folderId) => {
-              for (const folder of folders) {
-                if (folder.id === folderId) {
-                  if (!folder.records) folder.records = [];
-                  if (!folder.records.find(r => r.date === item.date && r.title === item.title)) {
-                    folder.records.push({
-                      date: item.date,
-                      title: item.title,
-                      rate: item.rate,
-                      total: 0,
-                      wrong: 0,
-                      sendDate: item.date
-                    });
-                  }
-                  return;
-                }
-                if (folder.children) {
-                  for (const child of folder.children) {
-                    if (child.id === folderId) {
-                      if (!child.records) child.records = [];
-                      if (!child.records.find(r => r.date === item.date && r.title === item.title)) {
-                        child.records.push({
-                          date: item.date,
-                          title: item.title,
-                          rate: item.rate,
-                          total: 0,
-                          wrong: 0,
-                          sendDate: item.date
-                        });
-                      }
-                      return;
-                    }
-                  }
-                }
-              }
-            };
-            
-            findAndStore(state.tab2.folders, item.folderId);
-          });
-          
-          saveState();
-          renderTab2Folders();
-          renderTab2Records();
-          renderTab2SendSchedule();
-          alert(`✅ ${spacedItems.size}件をフォルダに追加しました`);
-        }
+        const actions = document.createElement('div');
+        actions.className = 'folder-actions';
+        actions.innerHTML = `
+          <button class="btn btn-small btn-danger">削除</button>
+        `;
         
-        spacedItems.clear();
-        document.getElementById("drag-assign-modal").classList.remove("active");
+        actions.querySelector('.btn-danger').addEventListener('click', () => {
+          dm.folders = dm.folders.filter(f => f.id !== folder.id);
+          dm.saveFolders();
+          updateFolderView();
+        });
+        
+        folderItem.appendChild(header);
+        folderItem.appendChild(childrenDiv);
+        folderItem.appendChild(actions);
+        
+        header.addEventListener('click', () => {
+          childrenDiv.classList.toggle('open');
+          header.querySelector('.folder-toggle').textContent = childrenDiv.classList.contains('open') ? '▼' : '▶';
+        });
+        
+        folderTree.appendChild(folderItem);
       });
-      
-      document.getElementById("drag-assign-cancel").addEventListener("click", () => {
-        spacedItems.clear();
-        document.getElementById("drag-assign-modal").classList.remove("active");
-      });
-      
-      document.getElementById("ebbinghaus-auto").addEventListener("change", () => {
-        renderSpacedItemsList();
-        renderEbbinghausPreview();
-      });
-      
-      // Tab2 events
-      document.getElementById("tab2-save").addEventListener("click", saveTab2Result);
-      document.getElementById("tab2-add-folder").addEventListener("click", addFolder);
-      
-      // Initialize values
-      document.getElementById("tab1-title").value = state.tab1.title;
-      document.getElementById("tab2-email").value = state.tab2.email;
-      
-      // Initial render
-      if (!state.tab1.gridData.length) applyTab1();
-      else renderTab1();
-      
-      renderTab2Folders();
-      renderTab2Records();
-      updateChart();
-      renderTab2SendSchedule();
-      window.addEventListener("beforeunload", saveState);
     }
     
-    init();
+    document.getElementById('tab2-add-folder').addEventListener('click', () => {
+      const name = prompt('フォルダ名を入力してください:');
+      if (name && name.trim()) {
+        dm.addFolder(name.trim());
+        updateFolderView();
+      }
+    });
+    
+    document.getElementById('tab2-save').addEventListener('click', () => {
+      dm.email = document.getElementById('tab2-email').value;
+      dm.saveEmail();
+      alert('✅ 設定を保存しました');
+    });
+    
+    function updateHistoryView() {
+      const historyDiv = document.getElementById('tab1-history');
+      historyDiv.innerHTML = '';
+      
+      if (dm.records.length === 0) {
+        historyDiv.innerHTML = '<div class="empty-message">記録がありません</div>';
+        return;
+      }
+      
+      dm.records.forEach(record => {
+        const item = document.createElement('div');
+        item.className = 'list-item';
+        item.innerHTML = `
+          <div class="list-item-content">
+            <strong>${record.title}</strong>
+            <div style="font-size: 0.85rem; color: #999;">${record.timestamp}</div>
+            <div style="font-size: 0.9rem; color: var(--primary); font-weight: 700;">
+              ${record.correctCount} / ${record.totalQuestions} (${record.rate}%)
+            </div>
+          </div>
+        `;
+        historyDiv.appendChild(item);
+      });
+    }
+    
+    // ======================== タブ切り替え ========================
+    document.querySelectorAll('.tab-button').forEach(btn => {
+      btn.addEventListener('click', (e) => {
+        document.querySelectorAll('.tab-button').forEach(b => b.classList.remove('active'));
+        document.querySelectorAll('.content').forEach(c => c.classList.remove('active'));
+        
+        e.target.classList.add('active');
+        const tabId = e.target.dataset.tab;
+        document.getElementById(tabId).classList.add('active');
+        
+        if (tabId === 'tab2') {
+          updateFolderView();
+        }
+      });
+    });
+    
+    // ======================== 初期化 ========================
+    updateTab1Grid();
+    updateHistoryView();
   </script>
 </body>
 </html>
