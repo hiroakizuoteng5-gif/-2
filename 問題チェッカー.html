@@ -659,6 +659,7 @@
       box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
       display: flex;
       flex-direction: column;
+      overflow: auto;
     }
     
     .drag-assign-header {
@@ -672,8 +673,7 @@
       display: grid;
       grid-template-columns: 1fr 1fr;
       gap: 16px;
-      flex: 1;
-      overflow: hidden;
+      margin-bottom: 20px;
     }
     
     .drag-assign-panel {
@@ -683,6 +683,7 @@
       border-radius: 8px;
       background: #f8f9fa;
       overflow: hidden;
+      max-height: 400px;
     }
     
     .drag-assign-panel-header {
@@ -846,7 +847,6 @@
       display: flex;
       gap: 8px;
       justify-content: flex-end;
-      margin-top: 16px;
       border-top: 1px solid #e6e9ef;
       padding-top: 16px;
     }
@@ -856,7 +856,7 @@
       border: 1px solid #d7dbe6;
       border-radius: 6px;
       padding: 12px;
-      margin-top: 12px;
+      margin-bottom: 12px;
     }
     
     .ebbinghaus-title {
@@ -890,6 +890,37 @@
       font-size: 0.8rem;
       color: #999;
       margin-top: 2px;
+    }
+    
+    .folder-input-modal {
+      background: var(--card);
+      padding: 20px;
+      border-radius: 10px;
+      width: 90%;
+      max-width: 400px;
+      box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+    }
+    
+    .folder-input-modal-title {
+      font-weight: 800;
+      margin-bottom: 16px;
+      color: #333;
+      font-size: 1.1rem;
+    }
+    
+    .folder-input-modal-input {
+      width: 100%;
+      padding: 12px;
+      border: 1px solid #d7dbe6;
+      border-radius: 6px;
+      margin-bottom: 16px;
+      font-size: 0.95rem;
+    }
+    
+    .folder-input-modal-buttons {
+      display: flex;
+      gap: 8px;
+      justify-content: flex-end;
     }
     
     @media (max-width: 768px) {
@@ -1068,6 +1099,18 @@
     </div>
   </div>
   
+  <!-- フォルダ作成モーダル -->
+  <div class="modal" id="folder-input-modal">
+    <div class="folder-input-modal">
+      <div class="folder-input-modal-title">📁 新規フォルダ作成</div>
+      <input type="text" class="folder-input-modal-input" id="folder-name-input" placeholder="フォルダ名を入力..." />
+      <div class="folder-input-modal-buttons">
+        <button class="btn btn-warn" id="folder-input-cancel">キャンセル</button>
+        <button class="btn btn-success" id="folder-input-confirm">✅ 作成</button>
+      </div>
+    </div>
+  </div>
+  
   <!-- ドラッグ振替モーダル -->
   <div class="modal" id="drag-assign-modal">
     <div class="drag-assign-modal">
@@ -1084,19 +1127,17 @@
         <div class="drag-assign-panel">
           <div class="drag-assign-panel-header">📁 振替先フォルダ</div>
           <div class="drag-assign-list" id="drag-target-list"></div>
-          <div class="drag-drop-zone" id="drag-drop-zone">ここにドラッグ＆ドロップして振替</div>
         </div>
       </div>
       
       <!-- スケジュール設定 -->
-      <div style="margin-top: 16px;">
-        <div class="ebbinghaus-panel">
-          <div class="ebbinghaus-title">🔄 忘却曲線スケジュール（メール送信予定日）</div>
-          <div class="ebbinghaus-dates" id="ebbinghaus-schedule"></div>
-        </div>
-        <div style="margin-top: 12px; padding: 12px; background: #fff3cd; border-radius: 6px; font-size: 0.85rem; color: #856404;">
-          💡 同じ日付の記録は1つのメールにまとめて送信されます
-        </div>
+      <div class="ebbinghaus-panel">
+        <div class="ebbinghaus-title">🔄 忘却曲線スケジュール（メール送信予定日）</div>
+        <div class="ebbinghaus-dates" id="ebbinghaus-schedule"></div>
+      </div>
+      
+      <div style="padding: 12px; background: #fff3cd; border-radius: 6px; font-size: 0.85rem; color: #856404; margin-bottom: 16px;">
+        💡 同じ日付の記録は1つのメールにまとめて送信されます
       </div>
       
       <!-- フッター -->
@@ -1439,112 +1480,31 @@
       }
     });
     
-    // ======================== 履歴振替モーダル ========================
-    function openDragAssignModal() {
-      const modal = document.getElementById('drag-assign-modal');
-      const sourceList = document.getElementById('drag-source-list');
-      const targetList = document.getElementById('drag-target-list');
-      
-      sourceList.innerHTML = '';
-      targetList.innerHTML = '';
-      
-      dm.records.forEach(record => {
-        const item = document.createElement('div');
-        item.className = 'drag-item';
-        item.draggable = true;
-        item.dataset.recordId = record.id;
-        item.innerHTML = `
-          <div class="drag-item-content">
-            <div class="drag-item-title">${record.title}</div>
-            <div class="drag-item-meta">${record.timestamp}</div>
-          </div>
-          <div class="drag-item-rate">${record.rate}%</div>
-        `;
-        
-        item.addEventListener('dragstart', (e) => {
-          draggedItem = record;
-          item.classList.add('dragging');
-          e.dataTransfer.effectAllowed = 'move';
-        });
-        
-        item.addEventListener('dragend', () => {
-          item.classList.remove('dragging');
-        });
-        
-        sourceList.appendChild(item);
-      });
-      
-      dm.folders.forEach(folder => {
-        const item = document.createElement('div');
-        item.className = 'drag-item';
-        item.dataset.folderId = folder.id;
-        item.innerHTML = `
-          <div class="drag-item-content">
-            <div class="drag-item-title">📁 ${folder.name}</div>
-            <div class="drag-item-meta">記録数: ${folder.records.length}</div>
-          </div>
-        `;
-        targetList.appendChild(item);
-      });
-      
-      const dropZone = document.getElementById('drag-drop-zone');
-      dropZone.addEventListener('dragover', (e) => {
-        e.preventDefault();
-        dropZone.classList.add('drag-over');
-      });
-      
-      dropZone.addEventListener('dragleave', () => {
-        dropZone.classList.remove('drag-over');
-      });
-      
-      dropZone.addEventListener('drop', (e) => {
-        e.preventDefault();
-        dropZone.classList.remove('drag-over');
-        if (draggedItem) {
-          alert(`📤 "${draggedItem.title}" をドロップしました`);
-        }
-      });
-      
-      // Ebbinghaus スケジュール表示
-      const scheduleDiv = document.getElementById('ebbinghaus-schedule');
-      scheduleDiv.innerHTML = '';
-      const intervals = [
-        { days: 1, label: '1日後' },
-        { days: 7, label: '7日後' },
-        { days: 16, label: '16日後' },
-        { days: 35, label: '35日後' },
-        { days: 62, label: '62日後' }
-      ];
-      
-      intervals.forEach(interval => {
-        const date = new Date();
-        date.setDate(date.getDate() + interval.days);
-        const dateStr = date.toISOString().split('T')[0];
-        
-        const item = document.createElement('div');
-        item.className = 'ebbinghaus-date-item';
-        item.innerHTML = `
-          <div class="ebbinghaus-date-day">${interval.label}</div>
-          <div class="ebbinghaus-date-value">${dateStr}</div>
-        `;
-        scheduleDiv.appendChild(item);
-      });
-      
-      modal.classList.add('active');
+    // ======================== フォルダ作成モーダル ========================
+    function openFolderInputModal() {
+      document.getElementById('folder-input-modal').classList.add('active');
+      document.getElementById('folder-name-input').value = '';
+      document.getElementById('folder-name-input').focus();
     }
     
-    document.getElementById('drag-assign-cancel').addEventListener('click', () => {
-      document.getElementById('drag-assign-modal').classList.remove('active');
-      draggedItem = null;
+    document.getElementById('tab2-add-folder').addEventListener('click', openFolderInputModal);
+    
+    document.getElementById('folder-input-confirm').addEventListener('click', () => {
+      const name = document.getElementById('folder-name-input').value.trim();
+      if (name) {
+        dm.addFolder(name);
+        updateFolderView();
+        document.getElementById('folder-input-modal').classList.remove('active');
+      }
     });
     
-    document.getElementById('drag-assign-confirm').addEventListener('click', () => {
-      if (draggedItem) {
-        alert('✅ 振替が確定されました');
-        document.getElementById('drag-assign-modal').classList.remove('active');
-        draggedItem = null;
-      } else {
-        alert('⚠️ 記録を選択してください');
+    document.getElementById('folder-input-cancel').addEventListener('click', () => {
+      document.getElementById('folder-input-modal').classList.remove('active');
+    });
+    
+    document.getElementById('folder-name-input').addEventListener('keypress', (e) => {
+      if (e.key === 'Enter') {
+        document.getElementById('folder-input-confirm').click();
       }
     });
     
@@ -1601,19 +1561,6 @@
           folderTree.appendChild(folderItem);
         });
       }
-      
-      // フォルダ作成ボタンの再バインド
-      const addFolderBtn = document.getElementById('tab2-add-folder');
-      if (addFolderBtn) {
-        addFolderBtn.onclick = null;
-        addFolderBtn.addEventListener('click', () => {
-          const name = prompt('フォルダ名を入力してください:');
-          if (name && name.trim()) {
-            dm.addFolder(name.trim());
-            updateFolderView();
-          }
-        });
-      }
     }
     
     document.getElementById('tab2-save').addEventListener('click', () => {
@@ -1646,6 +1593,127 @@
         historyDiv.appendChild(item);
       });
     }
+    
+    // ======================== 履歴振替モーダル ========================
+    function openDragAssignModal() {
+      const modal = document.getElementById('drag-assign-modal');
+      const sourceList = document.getElementById('drag-source-list');
+      const targetList = document.getElementById('drag-target-list');
+      
+      sourceList.innerHTML = '';
+      targetList.innerHTML = '';
+      
+      if (dm.records.length === 0) {
+        sourceList.innerHTML = '<div class="empty-message">記録がありません</div>';
+      } else {
+        dm.records.forEach(record => {
+          const item = document.createElement('div');
+          item.className = 'drag-item';
+          item.draggable = true;
+          item.dataset.recordId = record.id;
+          item.innerHTML = `
+            <div class="drag-item-content">
+              <div class="drag-item-title">${record.title}</div>
+              <div class="drag-item-meta">${record.timestamp}</div>
+            </div>
+            <div class="drag-item-rate">${record.rate}%</div>
+          `;
+          
+          item.addEventListener('dragstart', (e) => {
+            draggedItem = record;
+            item.classList.add('dragging');
+            e.dataTransfer.effectAllowed = 'move';
+          });
+          
+          item.addEventListener('dragend', () => {
+            item.classList.remove('dragging');
+          });
+          
+          sourceList.appendChild(item);
+        });
+      }
+      
+      if (dm.folders.length === 0) {
+        targetList.innerHTML = '<div class="empty-message">フォルダがありません</div>';
+      } else {
+        dm.folders.forEach(folder => {
+          const item = document.createElement('div');
+          item.className = 'drag-item';
+          item.dataset.folderId = folder.id;
+          item.style.cursor = 'default';
+          item.innerHTML = `
+            <div class="drag-item-content">
+              <div class="drag-item-title">📁 ${folder.name}</div>
+              <div class="drag-item-meta">記録数: ${folder.records.length}</div>
+            </div>
+          `;
+          
+          item.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            item.style.background = '#e8f4ff';
+          });
+          
+          item.addEventListener('dragleave', () => {
+            item.style.background = '#fff';
+          });
+          
+          item.addEventListener('drop', (e) => {
+            e.preventDefault();
+            item.style.background = '#fff';
+            if (draggedItem) {
+              dm.moveRecordToFolder(draggedItem.id, parseInt(folder.id));
+              updateFolderView();
+              alert(`✅ "${draggedItem.title}" を "${folder.name}" に振替しました`);
+              draggedItem = null;
+            }
+          });
+          
+          targetList.appendChild(item);
+        });
+      }
+      
+      // Ebbinghaus スケジュール表示
+      const scheduleDiv = document.getElementById('ebbinghaus-schedule');
+      scheduleDiv.innerHTML = '';
+      const intervals = [
+        { days: 1, label: '1日後' },
+        { days: 7, label: '7日後' },
+        { days: 16, label: '16日後' },
+        { days: 35, label: '35日後' },
+        { days: 62, label: '62日後' }
+      ];
+      
+      intervals.forEach(interval => {
+        const date = new Date();
+        date.setDate(date.getDate() + interval.days);
+        const dateStr = date.toISOString().split('T')[0];
+        
+        const item = document.createElement('div');
+        item.className = 'ebbinghaus-date-item';
+        item.innerHTML = `
+          <div class="ebbinghaus-date-day">${interval.label}</div>
+          <div class="ebbinghaus-date-value">${dateStr}</div>
+        `;
+        scheduleDiv.appendChild(item);
+      });
+      
+      modal.classList.add('active');
+    }
+    
+    document.getElementById('drag-assign-cancel').addEventListener('click', () => {
+      document.getElementById('drag-assign-modal').classList.remove('active');
+      draggedItem = null;
+    });
+    
+    document.getElementById('drag-assign-confirm').addEventListener('click', () => {
+      if (draggedItem) {
+        alert('✅ 振替が確定されました');
+        document.getElementById('drag-assign-modal').classList.remove('active');
+        draggedItem = null;
+      } else {
+        alert('⚠️ 記録を選択してください');
+      }
+    });
     
     // ======================== タブ切り替え ========================
     document.querySelectorAll('.tab-button').forEach(btn => {
