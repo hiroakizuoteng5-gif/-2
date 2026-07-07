@@ -387,6 +387,7 @@
       align-items: center;
       justify-content: center;
       z-index: 9999;
+      overflow-y: auto;
     }
     
     .modal.active {
@@ -400,6 +401,7 @@
       width: 90%;
       max-width: 500px;
       box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+      margin: auto;
     }
     
     .modal-title {
@@ -659,6 +661,7 @@
       box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
       display: flex;
       flex-direction: column;
+      margin: auto;
     }
     
     .drag-assign-header {
@@ -901,6 +904,30 @@
       color: #999;
       margin-top: 2px;
     }
+
+    .folder-input-modal {
+      background: var(--card);
+      padding: 20px;
+      border-radius: 10px;
+      width: 90%;
+      max-width: 400px;
+      box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+      margin: auto;
+    }
+
+    .folder-input-modal h3 {
+      margin-bottom: 16px;
+      color: #333;
+    }
+
+    .folder-input-modal input {
+      width: 100%;
+      padding: 10px;
+      border: 1px solid #d7dbe6;
+      border-radius: 6px;
+      margin-bottom: 16px;
+      font-size: 0.95rem;
+    }
     
     @media (max-width: 768px) {
       header h1 {
@@ -1074,6 +1101,18 @@
             </div>
           </div>
         </div>
+      </div>
+    </div>
+  </div>
+  
+  <!-- 新規フォルダモーダル -->
+  <div class="modal" id="folder-input-modal">
+    <div class="folder-input-modal">
+      <h3>新規フォルダ作成</h3>
+      <input type="text" id="folder-input-name" placeholder="フォルダ名を入力..." />
+      <div class="modal-buttons">
+        <button class="btn btn-warn" id="folder-input-cancel">キャンセル</button>
+        <button class="btn btn-success" id="folder-input-confirm">作成</button>
       </div>
     </div>
   </div>
@@ -1449,7 +1488,7 @@
       }
     });
     
-    // ======================== 履歴振替モーダル ========================
+    // ======================== 履歴振替��ーダル ========================
     function openDragAssignModal() {
       const modal = document.getElementById('drag-assign-modal');
       const sourceList = document.getElementById('drag-source-list');
@@ -1582,6 +1621,14 @@
             }
           });
           
+          if (folder.records.length === 0) {
+            const emptyItem = document.createElement('div');
+            emptyItem.className = 'child-item';
+            emptyItem.style.color = '#999';
+            emptyItem.textContent = '（記録がありません）';
+            childrenDiv.appendChild(emptyItem);
+          }
+          
           const actions = document.createElement('div');
           actions.className = 'folder-actions';
           actions.innerHTML = `
@@ -1606,19 +1653,36 @@
           folderTree.appendChild(folderItem);
         });
       }
-      
-      // ボタンイベントを再度バインド
-      addFolderBtn.removeEventListener('click', addFolderHandler);
-      addFolderBtn.addEventListener('click', addFolderHandler);
     }
     
-    function addFolderHandler() {
-      const name = prompt('フォルダ名を入力してください:');
-      if (name && name.trim()) {
-        dm.addFolder(name.trim());
+    document.getElementById('tab2-add-folder').addEventListener('click', () => {
+      const modal = document.getElementById('folder-input-modal');
+      const input = document.getElementById('folder-input-name');
+      input.value = '';
+      modal.classList.add('active');
+      input.focus();
+    });
+    
+    document.getElementById('folder-input-confirm').addEventListener('click', () => {
+      const name = document.getElementById('folder-input-name').value.trim();
+      if (name) {
+        dm.addFolder(name);
+        document.getElementById('folder-input-modal').classList.remove('active');
         updateFolderView();
+      } else {
+        alert('⚠️ フォルダ名を入力してください');
       }
-    }
+    });
+    
+    document.getElementById('folder-input-cancel').addEventListener('click', () => {
+      document.getElementById('folder-input-modal').classList.remove('active');
+    });
+    
+    document.getElementById('folder-input-name').addEventListener('keypress', (e) => {
+      if (e.key === 'Enter') {
+        document.getElementById('folder-input-confirm').click();
+      }
+    });
     
     document.getElementById('tab2-save').addEventListener('click', () => {
       dm.email = document.getElementById('tab2-email').value;
